@@ -1,0 +1,63 @@
+{
+  "name": "@kud/mcp-unsplash",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "MCP server for Unsplash — search and fetch freely-licensed photos via the public Unsplash API.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "mcp-unsplash": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json && chmod +x dist/index.js",
+    "build:watch": "tsc -p tsconfig.json --watch",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "coverage": "vitest run --coverage",
+    "inspect": "npx @modelcontextprotocol/inspector node dist/index.js",
+    "inspect:dev": "npx @modelcontextprotocol/inspector tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "mcp",
+    "unsplash",
+    "photos",
+    "model-context-protocol"
+  ],
+  "author": "kud",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kud/mcp-unsplash.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kud/mcp-unsplash/issues"
+  },
+  "homepage": "https://github.com/kud/mcp-unsplash#readme",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.29.0",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "26.1.0",
+    "@vitest/coverage-v8": "4.1.9",
+    "tsx": "4.22.5",
+    "typescript": "6.0.3",
+    "vitest": "4.1.9"
+  }
+}
