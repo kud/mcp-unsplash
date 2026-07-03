@@ -22,11 +22,13 @@
 
 ## 🌟 Features
 
-- 🔍 **Keyword search** — full-text photo search with pagination, orientation, colour, and sort-order filters
+- 🔍 **Keyword search** — full-text search across photos, collections, and users, with pagination, orientation, colour, and sort-order filters
 - 🎲 **Random photos** — pull 1–30 random photos, optionally scoped to a query, collection, or topic
 - 🖼 **Full photo metadata** — resolve a single photo by ID, including EXIF and location where available
-- 📁 **Collections browsing** — list collections, fetch one by ID, and list the photos inside it
-- 🏷 **Editorial topics** — list Unsplash's curated topics and the photos within each one
+- 📁 **Collections browsing** — list collections, fetch one by ID, list its photos, find related collections
+- 🏷 **Editorial topics** — list Unsplash's curated topics, fetch one by ID/slug, and the photos within each one
+- 👤 **User profiles** — public profile, photos, collections, and statistics for any Unsplash user
+- 📊 **Statistics** — per-photo and per-user download/view/like statistics, plus platform-wide totals and monthly stats
 - ✂️ **LLM-trimmed responses** — every tool strips API payloads down to the fields an LLM actually needs (id, description, dimensions, colour, a small set of image URLs, author name + profile link)
 - ✅ **Guideline-compliant** — `get_photo` fires the Unsplash download-tracking ping automatically, as required by the API terms
 
@@ -77,16 +79,28 @@ Add the server to your client's MCP config (e.g. `.mcp.json`):
 
 ## 🛠 Available Tools
 
-| Tool                    | Description                                                                                 |
-| ----------------------- | ------------------------------------------------------------------------------------------- |
-| `search_photos`         | Keyword search — `query`, `page`, `per_page` (≤30), `orientation`, `color`, `order_by`      |
-| `random_photo`          | One or more random photos — `query`, `collections`, `topics`, `orientation`, `count` (1–30) |
-| `get_photo`             | Full metadata for a photo by `id`; also fires the Unsplash download-tracking ping           |
-| `list_collections`      | Browse collections — `page`, `per_page`                                                     |
-| `get_collection`        | Fetch a single collection by `id`                                                           |
-| `get_collection_photos` | Photos in a collection — `id`, `page`, `per_page`, `orientation`                            |
-| `list_topics`           | List editorial topics — `page`, `per_page`, `order_by`                                      |
-| `get_topic_photos`      | Photos in a topic — `id_or_slug`, `page`, `per_page`, `orientation`                         |
+| Tool                     | Description                                                                                 |
+| ------------------------ | ------------------------------------------------------------------------------------------- |
+| `list_photos`            | List all photos, newest first — `page`, `per_page` (≤30), `order_by`                        |
+| `search_photos`          | Keyword search — `query`, `page`, `per_page` (≤30), `orientation`, `color`, `order_by`      |
+| `random_photo`           | One or more random photos — `query`, `collections`, `topics`, `orientation`, `count` (1–30) |
+| `get_photo`              | Full metadata for a photo by `id`; also fires the Unsplash download-tracking ping           |
+| `get_photo_statistics`   | Download/view/like statistics for a photo — `id`, `resolution`, `quantity` (≤30)            |
+| `list_collections`       | Browse collections — `page`, `per_page`                                                     |
+| `get_collection`         | Fetch a single collection by `id`                                                           |
+| `get_collection_photos`  | Photos in a collection — `id`, `page`, `per_page`, `orientation`                            |
+| `search_collections`     | Keyword search for collections — `query`, `page`, `per_page`                                |
+| `get_collection_related` | Collections related to a given collection — `id`                                            |
+| `list_topics`            | List editorial topics — `page`, `per_page`, `order_by`                                      |
+| `get_topic_photos`       | Photos in a topic — `id_or_slug`, `page`, `per_page`, `orientation`                         |
+| `get_topic`              | Fetch a single topic by `id_or_slug`                                                        |
+| `get_user`               | Public profile for a user by `username`                                                     |
+| `get_user_photos`        | Photos published by a user — `username`, `page`, `per_page`, `order_by`, `orientation`      |
+| `get_user_collections`   | Collections curated by a user — `username`, `page`, `per_page`                              |
+| `get_user_statistics`    | Download/view/like statistics for a user — `username`, `resolution`, `quantity` (≤30)       |
+| `search_users`           | Keyword search for users — `query`, `page`, `per_page`                                      |
+| `get_stats_total`        | Unsplash's all-time platform statistics                                                     |
+| `get_stats_month`        | Unsplash's platform statistics for the past month — `resolution`, `quantity` (≤30)          |
 
 All responses are trimmed to the fields an LLM actually needs — `id`, `description`, `width`/`height`, `color`, a small `urls` subset (`regular`/`small`/`thumb`), and the author's `name` + profile link — rather than the full Unsplash payload.
 

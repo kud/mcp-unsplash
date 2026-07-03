@@ -89,6 +89,82 @@ type UnsplashTopic = {
   links: { html: string }
 }
 
+type UnsplashSearchCollectionsResponse = {
+  total: number
+  total_pages: number
+  results: UnsplashCollection[]
+}
+
+type UnsplashUserProfile = {
+  id?: string
+  username: string
+  name: string
+  bio: string | null
+  location: string | null
+  total_photos?: number
+  total_likes?: number
+  total_collections?: number
+  links: { html: string }
+}
+
+type UnsplashSearchUsersResponse = {
+  total: number
+  total_pages: number
+  results: UnsplashUserProfile[]
+}
+
+type UnsplashStatValue = { date: string; value: number }
+
+type UnsplashStatHistorical = {
+  change: number
+  resolution: string
+  quantity: number
+  values: UnsplashStatValue[]
+}
+
+type UnsplashStatMetric = {
+  total: number
+  historical: UnsplashStatHistorical
+}
+
+type UnsplashPhotoStatistics = {
+  id: string
+  downloads: UnsplashStatMetric
+  views: UnsplashStatMetric
+  likes?: UnsplashStatMetric
+}
+
+type UnsplashUserStatistics = {
+  username: string
+  downloads: UnsplashStatMetric
+  views: UnsplashStatMetric
+  likes?: UnsplashStatMetric
+}
+
+type UnsplashTotalStats = {
+  photos: number
+  downloads: number
+  views: number
+  likes: number
+  photographers: number
+  pixels: number
+  downloads_per_second: number
+  views_per_second: number
+  developers: number
+}
+
+type UnsplashMonthStats = {
+  downloads: number
+  views: number
+  likes: number
+  new_photos: number
+  new_photographers: number
+  new_pixels: number
+  new_developers: number
+  new_applications: number
+  new_requests: number
+}
+
 export const apiFetch = async <T>(
   path: string,
   options: RequestInit = {},
@@ -202,7 +278,33 @@ const trimTopicSummary = (topic: UnsplashTopic) => ({
   link: topic.links.html,
 })
 
+const trimUserSummary = (user: UnsplashUserProfile) => ({
+  name: user.name,
+  username: user.username,
+  profile: user.links?.html,
+  bio: user.bio,
+  location: user.location,
+  total_photos: user.total_photos,
+  total_likes: user.total_likes,
+  total_collections: user.total_collections,
+})
+
 // ─── Photos ───
+
+export const listPhotos = async ({
+  page = 1,
+  per_page = 10,
+  order_by,
+}: {
+  page?: number
+  per_page?: number
+  order_by?: "latest" | "oldest" | "popular"
+}) => {
+  const path = `/photos${buildQuery({ page, per_page, order_by })}`
+  const data = await apiFetch<UnsplashPhoto[]>(path)
+  if (!data) return err("failed to list photos")
+  return ok(data.map(trimPhotoSummary))
+}
 
 export const searchPhotos = async ({
   query,
@@ -277,6 +379,21 @@ export const getPhoto = async ({ id }: { id: string }) => {
   return ok(trimPhotoFull(data))
 }
 
+export const getPhotoStatistics = async ({
+  id,
+  resolution = "days",
+  quantity = 30,
+}: {
+  id: string
+  resolution?: "days"
+  quantity?: number
+}) => {
+  const path = `/photos/${id}/statistics${buildQuery({ resolution, quantity })}`
+  const data = await apiFetch<UnsplashPhotoStatistics>(path)
+  if (!data) return err("failed to fetch photo statistics")
+  return ok(data)
+}
+
 // ─── Collections ───
 
 export const listCollections = async ({
@@ -315,6 +432,33 @@ export const getCollectionPhotos = async ({
   return ok(data.map(trimPhotoSummary))
 }
 
+export const searchCollections = async ({
+  query,
+  page = 1,
+  per_page = 10,
+}: {
+  query: string
+  page?: number
+  per_page?: number
+}) => {
+  const path = `/search/collections${buildQuery({ query, page, per_page })}`
+  const data = await apiFetch<UnsplashSearchCollectionsResponse>(path)
+  if (!data) return err("failed to search collections")
+  return ok({
+    total: data.total,
+    total_pages: data.total_pages,
+    results: data.results.map(trimCollectionSummary),
+  })
+}
+
+export const getCollectionRelated = async ({ id }: { id: string }) => {
+  const data = await apiFetch<UnsplashCollection[]>(
+    `/collections/${id}/related`,
+  )
+  if (!data) return err("failed to fetch related collections")
+  return ok(data.map(trimCollectionSummary))
+}
+
 // ─── Topics ───
 
 export const listTopics = async ({
@@ -349,6 +493,109 @@ export const getTopicPhotos = async ({
   return ok(data.map(trimPhotoSummary))
 }
 
+export const getTopic = async ({ id_or_slug }: { id_or_slug: string }) => {
+  const data = await apiFetch<UnsplashTopic>(`/topics/${id_or_slug}`)
+  if (!data) return err("failed to fetch topic")
+  return ok(trimTopicSummary(data))
+}
+
+// ─── Users ───
+
+export const getUser = async ({ username }: { username: string }) => {
+  const data = await apiFetch<UnsplashUserProfile>(`/users/${username}`)
+  if (!data) return err("failed to fetch user")
+  return ok(trimUserSummary(data))
+}
+
+export const getUserPhotos = async ({
+  username,
+  page = 1,
+  per_page = 10,
+  order_by,
+  orientation,
+}: {
+  username: string
+  page?: number
+  per_page?: number
+  order_by?: "latest" | "oldest" | "popular" | "views" | "downloads"
+  orientation?: "landscape" | "portrait" | "squarish"
+}) => {
+  const path = `/users/${username}/photos${buildQuery({ page, per_page, order_by, orientation })}`
+  const data = await apiFetch<UnsplashPhoto[]>(path)
+  if (!data) return err("failed to fetch user photos")
+  return ok(data.map(trimPhotoSummary))
+}
+
+export const getUserCollections = async ({
+  username,
+  page = 1,
+  per_page = 10,
+}: {
+  username: string
+  page?: number
+  per_page?: number
+}) => {
+  const path = `/users/${username}/collections${buildQuery({ page, per_page })}`
+  const data = await apiFetch<UnsplashCollection[]>(path)
+  if (!data) return err("failed to fetch user collections")
+  return ok(data.map(trimCollectionSummary))
+}
+
+export const getUserStatistics = async ({
+  username,
+  resolution = "days",
+  quantity = 30,
+}: {
+  username: string
+  resolution?: "days"
+  quantity?: number
+}) => {
+  const path = `/users/${username}/statistics${buildQuery({ resolution, quantity })}`
+  const data = await apiFetch<UnsplashUserStatistics>(path)
+  if (!data) return err("failed to fetch user statistics")
+  return ok(data)
+}
+
+export const searchUsers = async ({
+  query,
+  page = 1,
+  per_page = 10,
+}: {
+  query: string
+  page?: number
+  per_page?: number
+}) => {
+  const path = `/search/users${buildQuery({ query, page, per_page })}`
+  const data = await apiFetch<UnsplashSearchUsersResponse>(path)
+  if (!data) return err("failed to search users")
+  return ok({
+    total: data.total,
+    total_pages: data.total_pages,
+    results: data.results.map(trimUserSummary),
+  })
+}
+
+// ─── Stats ───
+
+export const getStatsTotal = async () => {
+  const data = await apiFetch<UnsplashTotalStats>("/stats/total")
+  if (!data) return err("failed to fetch total stats")
+  return ok(data)
+}
+
+export const getStatsMonth = async ({
+  resolution = "days",
+  quantity = 30,
+}: {
+  resolution?: "days"
+  quantity?: number
+}) => {
+  const path = `/stats/month${buildQuery({ resolution, quantity })}`
+  const data = await apiFetch<UnsplashMonthStats>(path)
+  if (!data) return err("failed to fetch month stats")
+  return ok(data)
+}
+
 const server = new McpServer({ name: "unsplash", version: "1.0.0" })
 
 const orientationSchema = z
@@ -357,6 +604,28 @@ const orientationSchema = z
   .describe("Photo orientation filter")
 
 // ─── Photos ───
+
+server.registerTool(
+  "list_photos",
+  {
+    description: "List all Unsplash photos, newest first by default",
+    inputSchema: {
+      page: z.number().int().min(1).default(1).describe("Page number"),
+      per_page: z
+        .number()
+        .int()
+        .min(1)
+        .max(30)
+        .default(10)
+        .describe("Results per page (max 30)"),
+      order_by: z
+        .enum(["latest", "oldest", "popular"])
+        .optional()
+        .describe("Sort order"),
+    },
+  },
+  listPhotos,
+)
 
 server.registerTool(
   "search_photos",
@@ -429,6 +698,28 @@ server.registerTool(
   getPhoto,
 )
 
+server.registerTool(
+  "get_photo_statistics",
+  {
+    description: "Fetch download/view/like statistics for a photo by ID",
+    inputSchema: {
+      id: z.string().describe("Photo ID"),
+      resolution: z
+        .enum(["days"])
+        .default("days")
+        .describe("Time resolution for historical values"),
+      quantity: z
+        .number()
+        .int()
+        .min(1)
+        .max(30)
+        .default(30)
+        .describe("Number of historical data points (max 30)"),
+    },
+  },
+  getPhotoStatistics,
+)
+
 // ─── Collections ───
 
 server.registerTool(
@@ -478,6 +769,34 @@ server.registerTool(
   getCollectionPhotos,
 )
 
+server.registerTool(
+  "search_collections",
+  {
+    description: "Search Unsplash collections by keyword",
+    inputSchema: {
+      query: z.string().describe("Search terms"),
+      page: z.number().int().min(1).default(1).describe("Page number"),
+      per_page: z
+        .number()
+        .int()
+        .min(1)
+        .max(30)
+        .default(10)
+        .describe("Results per page (max 30)"),
+    },
+  },
+  searchCollections,
+)
+
+server.registerTool(
+  "get_collection_related",
+  {
+    description: "List collections related to a given collection",
+    inputSchema: { id: z.string().describe("Collection ID") },
+  },
+  getCollectionRelated,
+)
+
 // ─── Topics ───
 
 server.registerTool(
@@ -520,6 +839,142 @@ server.registerTool(
     },
   },
   getTopicPhotos,
+)
+
+server.registerTool(
+  "get_topic",
+  {
+    description: "Fetch a single Unsplash topic by ID or slug",
+    inputSchema: { id_or_slug: z.string().describe("Topic ID or slug") },
+  },
+  getTopic,
+)
+
+// ─── Users ───
+
+server.registerTool(
+  "get_user",
+  {
+    description: "Fetch a user's public profile by username",
+    inputSchema: { username: z.string().describe("Unsplash username") },
+  },
+  getUser,
+)
+
+server.registerTool(
+  "get_user_photos",
+  {
+    description: "List the photos published by a user",
+    inputSchema: {
+      username: z.string().describe("Unsplash username"),
+      page: z.number().int().min(1).default(1).describe("Page number"),
+      per_page: z
+        .number()
+        .int()
+        .min(1)
+        .max(30)
+        .default(10)
+        .describe("Results per page (max 30)"),
+      order_by: z
+        .enum(["latest", "oldest", "popular", "views", "downloads"])
+        .optional()
+        .describe("Sort order"),
+      orientation: orientationSchema,
+    },
+  },
+  getUserPhotos,
+)
+
+server.registerTool(
+  "get_user_collections",
+  {
+    description: "List the collections curated by a user",
+    inputSchema: {
+      username: z.string().describe("Unsplash username"),
+      page: z.number().int().min(1).default(1).describe("Page number"),
+      per_page: z
+        .number()
+        .int()
+        .min(1)
+        .max(30)
+        .default(10)
+        .describe("Results per page (max 30)"),
+    },
+  },
+  getUserCollections,
+)
+
+server.registerTool(
+  "get_user_statistics",
+  {
+    description: "Fetch download/view/like statistics for a user",
+    inputSchema: {
+      username: z.string().describe("Unsplash username"),
+      resolution: z
+        .enum(["days"])
+        .default("days")
+        .describe("Time resolution for historical values"),
+      quantity: z
+        .number()
+        .int()
+        .min(1)
+        .max(30)
+        .default(30)
+        .describe("Number of historical data points (max 30)"),
+    },
+  },
+  getUserStatistics,
+)
+
+server.registerTool(
+  "search_users",
+  {
+    description: "Search Unsplash users by keyword",
+    inputSchema: {
+      query: z.string().describe("Search terms"),
+      page: z.number().int().min(1).default(1).describe("Page number"),
+      per_page: z
+        .number()
+        .int()
+        .min(1)
+        .max(30)
+        .default(10)
+        .describe("Results per page (max 30)"),
+    },
+  },
+  searchUsers,
+)
+
+// ─── Stats ───
+
+server.registerTool(
+  "get_stats_total",
+  {
+    description: "Fetch Unsplash's all-time total platform statistics",
+    inputSchema: {},
+  },
+  getStatsTotal,
+)
+
+server.registerTool(
+  "get_stats_month",
+  {
+    description: "Fetch Unsplash's platform statistics for the past month",
+    inputSchema: {
+      resolution: z
+        .enum(["days"])
+        .default("days")
+        .describe("Time resolution for historical values"),
+      quantity: z
+        .number()
+        .int()
+        .min(1)
+        .max(30)
+        .default(30)
+        .describe("Number of historical data points (max 30)"),
+    },
+  },
+  getStatsMonth,
 )
 
 const main = async () => {

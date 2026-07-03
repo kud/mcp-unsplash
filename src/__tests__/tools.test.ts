@@ -5,14 +5,26 @@ vi.hoisted(() => {
 })
 
 import {
+  listPhotos,
   searchPhotos,
   randomPhoto,
   getPhoto,
+  getPhotoStatistics,
   listCollections,
   getCollection,
   getCollectionPhotos,
+  searchCollections,
+  getCollectionRelated,
   listTopics,
   getTopicPhotos,
+  getTopic,
+  getUser,
+  getUserPhotos,
+  getUserCollections,
+  getUserStatistics,
+  searchUsers,
+  getStatsTotal,
+  getStatsMonth,
 } from "../index.js"
 
 const mockFetch = vi.fn()
@@ -90,6 +102,66 @@ const sampleTopic = {
   total_photos: 99,
   cover_photo: samplePhoto,
   links: { html: "https://unsplash.com/t/nature" },
+}
+
+const sampleUser = {
+  id: "user1",
+  username: "janedoe",
+  name: "Jane Doe",
+  bio: "Photographer",
+  location: "Paris",
+  total_photos: 10,
+  total_likes: 20,
+  total_collections: 3,
+  links: { html: "https://unsplash.com/@janedoe" },
+}
+
+const sampleStatMetric = {
+  total: 100,
+  historical: {
+    change: 5,
+    resolution: "days",
+    quantity: 30,
+    values: [{ date: "2024-01-01", value: 10 }],
+  },
+}
+
+const samplePhotoStatistics = {
+  id: "abc123",
+  downloads: sampleStatMetric,
+  views: sampleStatMetric,
+  likes: sampleStatMetric,
+}
+
+const sampleUserStatistics = {
+  username: "janedoe",
+  downloads: sampleStatMetric,
+  views: sampleStatMetric,
+  likes: sampleStatMetric,
+}
+
+const sampleTotalStats = {
+  photos: 1,
+  downloads: 2,
+  views: 3,
+  likes: 4,
+  photographers: 5,
+  pixels: 6,
+  downloads_per_second: 7,
+  views_per_second: 8,
+  developers: 9,
+}
+
+const sampleMonthStats = {
+  downloads: 1,
+  views: 2,
+  likes: 3,
+  new_photos: 4,
+  new_photographers: 5,
+  new_pixels: 6,
+  new_developers: 7,
+  new_applications: 8,
+  new_requests: 9,
 }
 
 describe("searchPhotos", () => {
@@ -233,6 +305,193 @@ describe("getTopicPhotos", () => {
   it("returns error when fetch fails", async () => {
     mockFetch.mockReturnValue(failRes())
     const result = await getTopicPhotos({ id_or_slug: "nature" })
+    expect(text(result)).toContain("Error:")
+  })
+})
+
+describe("listPhotos", () => {
+  it("returns trimmed photos on success", async () => {
+    mockFetch.mockReturnValue(res([samplePhoto]))
+    const result = await listPhotos({})
+    expect(text(result)).toContain("abc123")
+    expect(mockFetch.mock.calls[0][0]).toContain("/photos")
+  })
+
+  it("returns error when fetch fails", async () => {
+    mockFetch.mockReturnValue(failRes())
+    const result = await listPhotos({})
+    expect(text(result)).toContain("Error:")
+  })
+})
+
+describe("getPhotoStatistics", () => {
+  it("returns statistics on success", async () => {
+    mockFetch.mockReturnValue(res(samplePhotoStatistics))
+    const result = await getPhotoStatistics({ id: "abc123" })
+    expect(text(result)).toContain("abc123")
+    expect(mockFetch.mock.calls[0][0]).toContain("/photos/abc123/statistics")
+  })
+
+  it("returns error when fetch fails", async () => {
+    mockFetch.mockReturnValue(failRes())
+    const result = await getPhotoStatistics({ id: "abc123" })
+    expect(text(result)).toContain("Error:")
+  })
+})
+
+describe("searchCollections", () => {
+  it("returns trimmed results on success", async () => {
+    mockFetch.mockReturnValue(
+      res({ total: 1, total_pages: 1, results: [sampleCollection] }),
+    )
+    const result = await searchCollections({ query: "nature" })
+    expect(text(result)).toContain("Nature")
+    expect(mockFetch.mock.calls[0][0]).toContain("/search/collections")
+    expect(mockFetch.mock.calls[0][0]).toContain("query=nature")
+  })
+
+  it("returns error when fetch fails", async () => {
+    mockFetch.mockReturnValue(failRes())
+    const result = await searchCollections({ query: "nature" })
+    expect(text(result)).toContain("Error:")
+  })
+})
+
+describe("getCollectionRelated", () => {
+  it("returns trimmed collections on success", async () => {
+    mockFetch.mockReturnValue(res([sampleCollection]))
+    const result = await getCollectionRelated({ id: "coll1" })
+    expect(text(result)).toContain("Nature")
+    expect(mockFetch.mock.calls[0][0]).toContain("/collections/coll1/related")
+  })
+
+  it("returns error when fetch fails", async () => {
+    mockFetch.mockReturnValue(failRes())
+    const result = await getCollectionRelated({ id: "coll1" })
+    expect(text(result)).toContain("Error:")
+  })
+})
+
+describe("getTopic", () => {
+  it("returns a trimmed topic on success", async () => {
+    mockFetch.mockReturnValue(res(sampleTopic))
+    const result = await getTopic({ id_or_slug: "nature" })
+    expect(text(result)).toContain("nature")
+    expect(mockFetch.mock.calls[0][0]).toContain("/topics/nature")
+  })
+
+  it("returns error when fetch fails", async () => {
+    mockFetch.mockReturnValue(failRes())
+    const result = await getTopic({ id_or_slug: "nature" })
+    expect(text(result)).toContain("Error:")
+  })
+})
+
+describe("getUser", () => {
+  it("returns a trimmed user on success", async () => {
+    mockFetch.mockReturnValue(res(sampleUser))
+    const result = await getUser({ username: "janedoe" })
+    expect(text(result)).toContain("janedoe")
+    expect(text(result)).toContain("Paris")
+    expect(mockFetch.mock.calls[0][0]).toContain("/users/janedoe")
+  })
+
+  it("returns error when fetch fails", async () => {
+    mockFetch.mockReturnValue(failRes())
+    const result = await getUser({ username: "janedoe" })
+    expect(text(result)).toContain("Error:")
+  })
+})
+
+describe("getUserPhotos", () => {
+  it("returns trimmed photos on success", async () => {
+    mockFetch.mockReturnValue(res([samplePhoto]))
+    const result = await getUserPhotos({ username: "janedoe" })
+    expect(text(result)).toContain("abc123")
+    expect(mockFetch.mock.calls[0][0]).toContain("/users/janedoe/photos")
+  })
+
+  it("returns error when fetch fails", async () => {
+    mockFetch.mockReturnValue(failRes())
+    const result = await getUserPhotos({ username: "janedoe" })
+    expect(text(result)).toContain("Error:")
+  })
+})
+
+describe("getUserCollections", () => {
+  it("returns trimmed collections on success", async () => {
+    mockFetch.mockReturnValue(res([sampleCollection]))
+    const result = await getUserCollections({ username: "janedoe" })
+    expect(text(result)).toContain("Nature")
+    expect(mockFetch.mock.calls[0][0]).toContain("/users/janedoe/collections")
+  })
+
+  it("returns error when fetch fails", async () => {
+    mockFetch.mockReturnValue(failRes())
+    const result = await getUserCollections({ username: "janedoe" })
+    expect(text(result)).toContain("Error:")
+  })
+})
+
+describe("getUserStatistics", () => {
+  it("returns statistics on success", async () => {
+    mockFetch.mockReturnValue(res(sampleUserStatistics))
+    const result = await getUserStatistics({ username: "janedoe" })
+    expect(text(result)).toContain("janedoe")
+    expect(mockFetch.mock.calls[0][0]).toContain("/users/janedoe/statistics")
+  })
+
+  it("returns error when fetch fails", async () => {
+    mockFetch.mockReturnValue(failRes())
+    const result = await getUserStatistics({ username: "janedoe" })
+    expect(text(result)).toContain("Error:")
+  })
+})
+
+describe("searchUsers", () => {
+  it("returns trimmed results on success", async () => {
+    mockFetch.mockReturnValue(
+      res({ total: 1, total_pages: 1, results: [sampleUser] }),
+    )
+    const result = await searchUsers({ query: "jane" })
+    expect(text(result)).toContain("janedoe")
+    expect(mockFetch.mock.calls[0][0]).toContain("/search/users")
+    expect(mockFetch.mock.calls[0][0]).toContain("query=jane")
+  })
+
+  it("returns error when fetch fails", async () => {
+    mockFetch.mockReturnValue(failRes())
+    const result = await searchUsers({ query: "jane" })
+    expect(text(result)).toContain("Error:")
+  })
+})
+
+describe("getStatsTotal", () => {
+  it("returns stats on success", async () => {
+    mockFetch.mockReturnValue(res(sampleTotalStats))
+    const result = await getStatsTotal()
+    expect(text(result)).toContain("photographers")
+    expect(mockFetch.mock.calls[0][0]).toContain("/stats/total")
+  })
+
+  it("returns error when fetch fails", async () => {
+    mockFetch.mockReturnValue(failRes())
+    const result = await getStatsTotal()
+    expect(text(result)).toContain("Error:")
+  })
+})
+
+describe("getStatsMonth", () => {
+  it("returns stats on success", async () => {
+    mockFetch.mockReturnValue(res(sampleMonthStats))
+    const result = await getStatsMonth({})
+    expect(text(result)).toContain("new_photos")
+    expect(mockFetch.mock.calls[0][0]).toContain("/stats/month")
+  })
+
+  it("returns error when fetch fails", async () => {
+    mockFetch.mockReturnValue(failRes())
+    const result = await getStatsMonth({})
     expect(text(result)).toContain("Error:")
   })
 })
