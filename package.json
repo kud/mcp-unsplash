@@ -1,6 +1,6 @@
 {
   "name": "@kud/mcp-unsplash",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "type": "module",
   "description": "MCP server for Unsplash — search and fetch freely-licensed photos via the public Unsplash API.",
   "main": "dist/index.js",
