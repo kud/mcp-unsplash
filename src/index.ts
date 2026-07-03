@@ -3,9 +3,9 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod"
 
-const ACCESS_KEY = process.env["UNSPLASH_ACCESS_KEY"]
+const ACCESS_KEY = process.env["MCP_UNSPLASH_ACCESS_KEY"]
 if (!ACCESS_KEY) {
-  console.error("UNSPLASH_ACCESS_KEY env var is required")
+  console.error("MCP_UNSPLASH_ACCESS_KEY env var is required")
   process.exit(1)
 }
 

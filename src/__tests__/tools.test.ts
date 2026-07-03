@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest"
 
 vi.hoisted(() => {
-  process.env.UNSPLASH_ACCESS_KEY = "test-access-key"
+  process.env.MCP_UNSPLASH_ACCESS_KEY = "test-access-key"
 })
 
 import {
