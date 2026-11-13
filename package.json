@@ -42,7 +42,7 @@
   "bugs": {
     "url": "https://github.com/kud/mcp-unsplash/issues"
   },
-  "homepage": "https://github.com/kud/mcp-unsplash#readme",
+  "homepage": "https://kud.io/projects/mcp-unsplash",
   "engines": {
     "node": ">=20.0.0"
   },
