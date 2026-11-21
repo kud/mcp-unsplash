@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
+import { createRequire } from "node:module"
 import { z } from "zod"
 
 const ACCESS_KEY = process.env["MCP_UNSPLASH_ACCESS_KEY"]
@@ -597,7 +598,12 @@ export const getStatsMonth = async ({
   return ok(data)
 }
 
-const server = new McpServer({ name: "unsplash", version: "1.0.0" })
+const require = createRequire(import.meta.url)
+export const { version: VERSION } = require("../package.json") as {
+  version: string
+}
+
+const server = new McpServer({ name: "unsplash", version: VERSION })
 
 const orientationSchema = z
   .enum(["landscape", "portrait", "squarish"])

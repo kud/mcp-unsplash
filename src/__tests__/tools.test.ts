@@ -27,7 +27,9 @@ import {
   getStatsMonth,
   ok,
   err,
+  VERSION,
 } from "../index.js"
+import pkg from "../../package.json" with { type: "json" }
 
 const mockFetch = vi.fn()
 
@@ -527,5 +529,11 @@ describe("result helpers", () => {
 
   it("ok does not flag the result as an error", () => {
     expect(ok({ a: 1 })).not.toHaveProperty("isError")
+  })
+})
+
+describe("server version", () => {
+  it("matches package.json", () => {
+    expect(VERSION).toBe(pkg.version)
   })
 })
