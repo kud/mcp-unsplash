@@ -205,6 +205,7 @@ export const ok = (data: unknown) => ({
 
 export const err = (msg: string) => ({
   content: [{ type: "text" as const, text: `Error: ${msg}` }],
+  isError: true as const,
 })
 
 const buildQuery = (

@@ -25,6 +25,8 @@ import {
   searchUsers,
   getStatsTotal,
   getStatsMonth,
+  ok,
+  err,
 } from "../index.js"
 
 const mockFetch = vi.fn()
@@ -180,6 +182,7 @@ describe("searchPhotos", () => {
     mockFetch.mockReturnValue(failRes())
     const result = await searchPhotos({ query: "mountains" })
     expect(text(result)).toContain("Error:")
+    expect(result).toHaveProperty("isError", true)
   })
 })
 
@@ -202,6 +205,7 @@ describe("randomPhoto", () => {
     mockFetch.mockReturnValue(failRes())
     const result = await randomPhoto({})
     expect(text(result)).toContain("Error:")
+    expect(result).toHaveProperty("isError", true)
   })
 })
 
@@ -231,6 +235,7 @@ describe("getPhoto", () => {
     mockFetch.mockReturnValue(failRes())
     const result = await getPhoto({ id: "abc123" })
     expect(text(result)).toContain("Error:")
+    expect(result).toHaveProperty("isError", true)
   })
 })
 
@@ -246,6 +251,7 @@ describe("listCollections", () => {
     mockFetch.mockReturnValue(failRes())
     const result = await listCollections({})
     expect(text(result)).toContain("Error:")
+    expect(result).toHaveProperty("isError", true)
   })
 })
 
@@ -261,6 +267,7 @@ describe("getCollection", () => {
     mockFetch.mockReturnValue(failRes())
     const result = await getCollection({ id: "coll1" })
     expect(text(result)).toContain("Error:")
+    expect(result).toHaveProperty("isError", true)
   })
 })
 
@@ -276,6 +283,7 @@ describe("getCollectionPhotos", () => {
     mockFetch.mockReturnValue(failRes())
     const result = await getCollectionPhotos({ id: "coll1" })
     expect(text(result)).toContain("Error:")
+    expect(result).toHaveProperty("isError", true)
   })
 })
 
@@ -291,6 +299,7 @@ describe("listTopics", () => {
     mockFetch.mockReturnValue(failRes())
     const result = await listTopics({})
     expect(text(result)).toContain("Error:")
+    expect(result).toHaveProperty("isError", true)
   })
 })
 
@@ -306,6 +315,7 @@ describe("getTopicPhotos", () => {
     mockFetch.mockReturnValue(failRes())
     const result = await getTopicPhotos({ id_or_slug: "nature" })
     expect(text(result)).toContain("Error:")
+    expect(result).toHaveProperty("isError", true)
   })
 })
 
@@ -321,6 +331,7 @@ describe("listPhotos", () => {
     mockFetch.mockReturnValue(failRes())
     const result = await listPhotos({})
     expect(text(result)).toContain("Error:")
+    expect(result).toHaveProperty("isError", true)
   })
 })
 
@@ -336,6 +347,7 @@ describe("getPhotoStatistics", () => {
     mockFetch.mockReturnValue(failRes())
     const result = await getPhotoStatistics({ id: "abc123" })
     expect(text(result)).toContain("Error:")
+    expect(result).toHaveProperty("isError", true)
   })
 })
 
@@ -354,6 +366,7 @@ describe("searchCollections", () => {
     mockFetch.mockReturnValue(failRes())
     const result = await searchCollections({ query: "nature" })
     expect(text(result)).toContain("Error:")
+    expect(result).toHaveProperty("isError", true)
   })
 })
 
@@ -369,6 +382,7 @@ describe("getCollectionRelated", () => {
     mockFetch.mockReturnValue(failRes())
     const result = await getCollectionRelated({ id: "coll1" })
     expect(text(result)).toContain("Error:")
+    expect(result).toHaveProperty("isError", true)
   })
 })
 
@@ -384,6 +398,7 @@ describe("getTopic", () => {
     mockFetch.mockReturnValue(failRes())
     const result = await getTopic({ id_or_slug: "nature" })
     expect(text(result)).toContain("Error:")
+    expect(result).toHaveProperty("isError", true)
   })
 })
 
@@ -400,6 +415,7 @@ describe("getUser", () => {
     mockFetch.mockReturnValue(failRes())
     const result = await getUser({ username: "janedoe" })
     expect(text(result)).toContain("Error:")
+    expect(result).toHaveProperty("isError", true)
   })
 })
 
@@ -415,6 +431,7 @@ describe("getUserPhotos", () => {
     mockFetch.mockReturnValue(failRes())
     const result = await getUserPhotos({ username: "janedoe" })
     expect(text(result)).toContain("Error:")
+    expect(result).toHaveProperty("isError", true)
   })
 })
 
@@ -430,6 +447,7 @@ describe("getUserCollections", () => {
     mockFetch.mockReturnValue(failRes())
     const result = await getUserCollections({ username: "janedoe" })
     expect(text(result)).toContain("Error:")
+    expect(result).toHaveProperty("isError", true)
   })
 })
 
@@ -445,6 +463,7 @@ describe("getUserStatistics", () => {
     mockFetch.mockReturnValue(failRes())
     const result = await getUserStatistics({ username: "janedoe" })
     expect(text(result)).toContain("Error:")
+    expect(result).toHaveProperty("isError", true)
   })
 })
 
@@ -463,6 +482,7 @@ describe("searchUsers", () => {
     mockFetch.mockReturnValue(failRes())
     const result = await searchUsers({ query: "jane" })
     expect(text(result)).toContain("Error:")
+    expect(result).toHaveProperty("isError", true)
   })
 })
 
@@ -478,6 +498,7 @@ describe("getStatsTotal", () => {
     mockFetch.mockReturnValue(failRes())
     const result = await getStatsTotal()
     expect(text(result)).toContain("Error:")
+    expect(result).toHaveProperty("isError", true)
   })
 })
 
@@ -493,5 +514,18 @@ describe("getStatsMonth", () => {
     mockFetch.mockReturnValue(failRes())
     const result = await getStatsMonth({})
     expect(text(result)).toContain("Error:")
+    expect(result).toHaveProperty("isError", true)
+  })
+})
+
+describe("result helpers", () => {
+  it("err flags the result as a tool error", () => {
+    const result = err("boom")
+    expect(text(result)).toBe("Error: boom")
+    expect(result.isError).toBe(true)
+  })
+
+  it("ok does not flag the result as an error", () => {
+    expect(ok({ a: 1 })).not.toHaveProperty("isError")
   })
 })
