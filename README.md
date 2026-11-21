@@ -29,7 +29,7 @@
 - 🏷 **Editorial topics** — list Unsplash's curated topics, fetch one by ID/slug, and the photos within each one
 - 👤 **User profiles** — public profile, photos, collections, and statistics for any Unsplash user
 - 📊 **Statistics** — per-photo and per-user download/view/like statistics, plus platform-wide totals and monthly stats
-- ✂️ **LLM-trimmed responses** — every tool strips API payloads down to the fields an LLM actually needs (id, description, dimensions, colour, a small set of image URLs, author name + profile link)
+- ✂️ **Trimmed responses** — list, search and browse tools strip API payloads down to the fields a model actually needs (id, description, dimensions, colour, a small set of image URLs, author name + profile link); single-photo lookups keep the full metadata, and statistics are passed through as Unsplash returns them
 - ✅ **Guideline-compliant** — `get_photo` fires the Unsplash download-tracking ping automatically, as required by the API terms
 
 ## 🚀 Quick Start
@@ -102,7 +102,9 @@ Add the server to your client's MCP config (e.g. `.mcp.json`):
 | `get_stats_total`        | Unsplash's all-time platform statistics                                                     |
 | `get_stats_month`        | Unsplash's platform statistics for the past month — `resolution`, `quantity` (≤30)          |
 
-All responses are trimmed to the fields an LLM actually needs — `id`, `description`, `width`/`height`, `color`, a small `urls` subset (`regular`/`small`/`thumb`), and the author's `name` + profile link — rather than the full Unsplash payload.
+List, search and browse tools return trimmed photo, collection, topic and user summaries rather than the full Unsplash payload; a photo summary carries `id`, `description`, `width`/`height`, `color`, `likes`, a small `urls` subset (`regular`/`small`/`thumb`), a `link`, and the author's `name`, `username` and profile link. `get_photo`, and `random_photo` when called without `count`, return the fuller shape instead: the complete `urls` set plus `created_at`, `downloads`, `exif` and `location` where available. The statistics tools (`get_photo_statistics`, `get_user_statistics`, `get_stats_total`, `get_stats_month`) return Unsplash's payload untrimmed. Paginated tools default to `page` 1 and `per_page` 10, capped at 30.
+
+When a request fails, the tool replies with a plain `Error: failed to <action>` message (for example `Error: failed to search photos`). The HTTP status is logged to stderr only, so a rate-limit rejection looks the same as any other failure from the client's side.
 
 ### Attribution and hotlinking
 
@@ -110,7 +112,7 @@ Unsplash's API guidelines require crediting the photographer and hotlinking imag
 
 - Use the returned `urls` values directly (don't download and re-serve the image yourself)
 - Credit the photographer by name, linking to their `author.profile` URL
-- Let `get_photo` do its job — it pings Unsplash's download-tracking endpoint automatically, satisfying the "register a download" requirement whenever a photo is used
+- Call `get_photo` for the photo you actually use — it pings Unsplash's download-tracking endpoint (best-effort), which is what registers the download; search and list results do not
 
 ## 🔧 Development
 
@@ -120,6 +122,7 @@ mcp-unsplash/
 │   ├── index.ts              MCP server, tool registration, Unsplash API client
 │   └── __tests__/
 │       └── tools.test.ts     Vitest coverage for each tool
+├── docs/                     Per-topic documentation pages
 ├── dist/                     Compiled output (npm run build)
 └── .mcp.json                 Local dev MCP client config (tsx, no build step)
 ```
@@ -139,8 +142,7 @@ mcp-unsplash/
 git clone https://github.com/kud/mcp-unsplash.git
 cd mcp-unsplash
 npm install
-cp .env.example .env
-npm run dev
+MCP_UNSPLASH_ACCESS_KEY=your-access-key npm run dev
 ```
 
 ## 🏗 Tech Stack
